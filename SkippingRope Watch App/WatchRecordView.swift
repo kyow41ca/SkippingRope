@@ -1,6 +1,7 @@
 import SwiftUI
 import HealthKit
 import CoreMotion
+import WatchConnectivity
 
 @Observable
 final class WatchWorkoutManager: NSObject {
@@ -77,10 +78,26 @@ final class WatchWorkoutManager: NSObject {
         motionManager.stopAccelerometerUpdates()
 
         let now = Date()
+        let snapshot = (jumpCount: jumpCount, duration: elapsedTime, calories: calories, date: now)
+
         session?.end()
         builder?.endCollection(withEnd: now) { [weak self] _, _ in
             self?.builder?.finishWorkout { _, _ in }
         }
+
+        sendToPhone(snapshot)
+    }
+
+    private func sendToPhone(_ data: (jumpCount: Int, duration: TimeInterval, calories: Double, date: Date)) {
+        guard WCSession.isSupported(),
+              WCSession.default.activationState == .activated else { return }
+        let payload: [String: Any] = [
+            "jumpCount": data.jumpCount,
+            "duration": data.duration,
+            "calories": data.calories,
+            "date": data.date.timeIntervalSince1970
+        ]
+        WCSession.default.transferUserInfo(payload)
     }
 
     private func startAccelerometer() {
