@@ -44,7 +44,7 @@ final class WatchWorkoutManager: NSObject {
         let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { [weak self] _, samples, _ in
             guard let sample = samples?.first as? HKQuantitySample else { return }
             let kg = sample.quantity.doubleValue(for: .gramUnit(with: .kilo))
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 self?.bodyWeightKg = kg
             }
         }
@@ -98,14 +98,24 @@ final class WatchWorkoutManager: NSObject {
         motionManager.stopAccelerometerUpdates()
 
         let now = Date()
-        let snapshot = (jumpCount: jumpCount, duration: elapsedTime, calories: calories, date: now)
-
         session?.end()
         builder?.endCollection(withEnd: now) { [weak self] _, _ in
             self?.builder?.finishWorkout { _, _ in }
         }
+    }
 
-        sendToPhone(snapshot)
+    func save() {
+        let payload: (jumpCount: Int, duration: TimeInterval, calories: Double, date: Date) = (jumpCount, elapsedTime, calories, Date())
+        sendToPhone(payload)
+        reset()
+    }
+
+    func reset() {
+        elapsedTime = 0
+        jumpCount = 0
+        calories = 0
+        wasAboveThreshold = false
+        lastJumpTime = .distantPast
     }
 
     private func sendToPhone(_ data: (jumpCount: Int, duration: TimeInterval, calories: Double, date: Date)) {
@@ -117,7 +127,10 @@ final class WatchWorkoutManager: NSObject {
             "calories": data.calories,
             "date": data.date.timeIntervalSince1970
         ]
-        WCSession.default.transferUserInfo(payload)
+        WCSession.default.sendMessage(payload, replyHandler: nil, errorHandler: { _ in
+            // sendMessage が失敗した場合（iOSアプリが非アクティブ）はバックグラウンド転送にフォールバック
+            WCSession.default.transferUserInfo(payload)
+        })
     }
 
     private func startAccelerometer() {
@@ -205,6 +218,24 @@ struct WatchRecordView: View {
             }
             .tint(manager.isRunning ? .red : .green)
             .buttonStyle(.bordered)
+
+            if !manager.isRunning && manager.elapsedTime > 0 {
+                HStack(spacing: 8) {
+                    Button("保存") {
+                        manager.save()
+                    }
+                    .tint(.blue)
+                    .buttonStyle(.bordered)
+                    .font(.footnote)
+
+                    Button("リセット", role: .destructive) {
+                        manager.reset()
+                    }
+                    .buttonStyle(.bordered)
+                    .font(.footnote)
+                }
+            }
+
         }
         .navigationTitle("記録")
         .navigationBarTitleDisplayMode(.inline)

@@ -9,7 +9,6 @@ struct RecordView: View {
     @State private var isRecording = false
     @State private var elapsedTime: TimeInterval = 0
     @State private var timer: Timer?
-    @State private var showSaveAlert = false
 
     private var jumpCount: Int { jumpDetector.jumpCount }
 
@@ -66,20 +65,18 @@ struct RecordView: View {
                     }
 
                     if !isRecording && elapsedTime > 0 {
-                        Button("リセット", role: .destructive, action: reset)
-                            .font(.subheadline)
+                        HStack(spacing: 16) {
+                            Button("保存", action: saveRecord)
+                                .font(.subheadline)
+                            Button("リセット", role: .destructive, action: reset)
+                                .font(.subheadline)
+                        }
                     }
                 }
                 .padding(.horizontal, 40)
                 .padding(.bottom, 20)
             }
             .navigationTitle("記録")
-            .alert("記録を保存しますか？", isPresented: $showSaveAlert) {
-                Button("保存") { saveRecord() }
-                Button("キャンセル", role: .cancel) {}
-            } message: {
-                Text("\(jumpCount)回 / \(timeString(elapsedTime))")
-            }
             .task {
                 await healthKit.requestAuthorization()
             }
@@ -103,7 +100,6 @@ struct RecordView: View {
         jumpDetector.stop()
         timer?.invalidate()
         timer = nil
-        if elapsedTime > 0 { showSaveAlert = true }
     }
 
     private func saveRecord() {
