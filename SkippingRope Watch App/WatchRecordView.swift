@@ -200,32 +200,10 @@ struct WatchRecordView: View {
                 }
             }
 
-            HStack(spacing: 8) {
-                // 手動 -1（誤検知補正）
-                Button {
-                    if manager.jumpCount > 0 { manager.jumpCount -= 1 }
-                } label: {
-                    Image(systemName: "minus")
-                        .font(.caption.bold())
-                }
-                .disabled(!manager.isRunning)
-                .tint(.red)
-
-                Button(manager.isRunning ? "停止" : "開始") {
-                    if manager.isRunning { manager.stop() } else { manager.start() }
-                }
-                .tint(manager.isRunning ? .red : .green)
-
-                // 手動 +1（拾い損ね補正）
-                Button {
-                    if manager.isRunning { manager.jumpCount += 1 }
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.caption.bold())
-                }
-                .disabled(!manager.isRunning)
-                .tint(.blue)
+            Button(manager.isRunning ? "停止" : "開始") {
+                if manager.isRunning { manager.stop() } else { manager.start() }
             }
+            .tint(manager.isRunning ? .red : .green)
             .buttonStyle(.bordered)
         }
         .navigationTitle("記録")

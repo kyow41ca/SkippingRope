@@ -38,7 +38,7 @@ struct RecordView: View {
                     StatCard(title: "ペース", value: String(format: "%.0f", pace), unit: "/分")
                 }
 
-                // センサー検出インジケーター + 手動補正ボタン
+                // センサー検出インジケーター
                 VStack(spacing: 8) {
                     if isRecording {
                         Label("加速度センサーで自動検出中", systemImage: "sensor.tag.radiowaves.forward.fill")
@@ -46,32 +46,10 @@ struct RecordView: View {
                             .foregroundStyle(.blue)
                     }
 
-                    HStack(spacing: 16) {
-                        // 手動 -1（誤検知補正）
-                        Button {
-                            if jumpDetector.jumpCount > 0 { jumpDetector.jumpCount -= 1 }
-                        } label: {
-                            Image(systemName: "minus.circle")
-                                .font(.title2)
-                        }
-                        .disabled(!isRecording)
-                        .tint(.red)
-
-                        Image(systemName: "figure.jumprope")
-                            .font(.system(size: 64))
-                            .foregroundStyle(isRecording ? .blue : .gray)
-                            .symbolEffect(.variableColor.iterative, isActive: isRecording)
-
-                        // 手動 +1（拾い損ね補正）
-                        Button {
-                            if isRecording { jumpDetector.jumpCount += 1 }
-                        } label: {
-                            Image(systemName: "plus.circle")
-                                .font(.title2)
-                        }
-                        .disabled(!isRecording)
-                        .tint(.blue)
-                    }
+                    Image(systemName: "figure.jumprope")
+                        .font(.system(size: 64))
+                        .foregroundStyle(isRecording ? .blue : .gray)
+                        .symbolEffect(.variableColor.iterative, isActive: isRecording)
                 }
 
                 Spacer()
