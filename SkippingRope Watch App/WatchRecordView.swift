@@ -192,11 +192,18 @@ struct WatchRecordView: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            Text(timeString(manager.elapsedTime))
-                .font(.system(size: 32, weight: .thin, design: .monospaced))
-                .foregroundStyle(manager.isRunning ? .primary : .secondary)
+            HStack(spacing: 8) {
+                Image(systemName: "figure.jumprope")
+                    .font(.system(size: 24))
+                    .foregroundStyle(manager.isRunning ? .blue : .gray)
+                    .symbolEffect(.variableColor.iterative, isActive: manager.isRunning)
 
-            HStack(spacing: 16) {
+                Text(timeString(manager.elapsedTime))
+                    .font(.system(size: 28, weight: .thin, design: .monospaced))
+                    .foregroundStyle(manager.isRunning ? .primary : .secondary)
+            }
+
+            HStack(spacing: 20) {
                 VStack(spacing: 0) {
                     Text("\(manager.jumpCount)")
                         .font(.title3.bold())
@@ -235,10 +242,8 @@ struct WatchRecordView: View {
                     .font(.footnote)
                 }
             }
-
         }
-        .navigationTitle("記録")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .task {
             await manager.requestAuthorization()
         }
