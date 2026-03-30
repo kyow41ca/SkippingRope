@@ -1,11 +1,5 @@
-//
-//  SkippingRopeApp.swift
-//  SkippingRope
-//
-//  Created by Yuki Yoshinaga on 2026/03/30.
-//
-
 import SwiftUI
+import SwiftData
 
 @main
 struct SkippingRopeApp: App {
@@ -13,5 +7,6 @@ struct SkippingRopeApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: WorkoutRecord.self)
     }
 }

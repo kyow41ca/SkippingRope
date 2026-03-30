@@ -1,24 +1,23 @@
-//
-//  ContentView.swift
-//  SkippingRope
-//
-//  Created by Yuki Yoshinaga on 2026/03/30.
-//
-
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            Tab("記録", systemImage: "play.circle.fill") {
+                RecordView()
+            }
+            Tab("履歴", systemImage: "list.bullet") {
+                HistoryView()
+            }
+            Tab("グラフ", systemImage: "chart.bar.fill") {
+                GraphView()
+            }
         }
-        .padding()
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: WorkoutRecord.self, inMemory: true)
 }
