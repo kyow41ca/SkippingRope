@@ -15,6 +15,7 @@ final class WatchWorkoutManager: NSObject {
     var elapsedTime: TimeInterval = 0
     var jumpCount = 0
     var calories: Double = 0
+    private var bodyWeightKg: Double = 60.0
 
     // ジャンプ検出パラメータ（iOS版と共通）
     private let threshold: Double = 1.7
@@ -24,11 +25,30 @@ final class WatchWorkoutManager: NSObject {
 
     func requestAuthorization() async {
         guard HKHealthStore.isHealthDataAvailable() else { return }
-        let types: Set<HKSampleType> = [
+        let shareTypes: Set<HKSampleType> = [
             HKObjectType.workoutType(),
             HKQuantityType(.activeEnergyBurned)
         ]
-        try? await healthStore.requestAuthorization(toShare: types, read: types)
+        let readTypes: Set<HKObjectType> = [
+            HKObjectType.workoutType(),
+            HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.bodyMass)
+        ]
+        try? await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
+        await fetchBodyWeight()
+    }
+
+    func fetchBodyWeight() async {
+        let type = HKQuantityType(.bodyMass)
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { [weak self] _, samples, _ in
+            guard let sample = samples?.first as? HKQuantitySample else { return }
+            let kg = sample.quantity.doubleValue(for: .gramUnit(with: .kilo))
+            Task { @MainActor in
+                self?.bodyWeightKg = kg
+            }
+        }
+        healthStore.execute(query)
     }
 
     func start() {
@@ -65,7 +85,7 @@ final class WatchWorkoutManager: NSObject {
         clockTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.elapsedTime += 0.5
-            self.calories = 11.0 * 60.0 * (self.elapsedTime / 3600)
+            self.calories = 11.0 * self.bodyWeightKg * (self.elapsedTime / 3600)
         }
 
         startAccelerometer()

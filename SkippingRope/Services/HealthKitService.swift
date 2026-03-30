@@ -5,6 +5,7 @@ import HealthKit
 final class HealthKitService {
     private let store = HKHealthStore()
     var isAuthorized = false
+    var bodyWeightKg: Double = 60.0  // デフォルト60kg、取得できれば上書き
 
     func requestAuthorization() async {
         guard HKHealthStore.isHealthDataAvailable() else { return }
@@ -13,14 +14,32 @@ final class HealthKitService {
             HKObjectType.workoutType(),
             HKQuantityType(.activeEnergyBurned)
         ]
-        let readTypes: Set<HKObjectType> = writeTypes
+        let readTypes: Set<HKObjectType> = [
+            HKObjectType.workoutType(),
+            HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.bodyMass)
+        ]
 
         do {
             try await store.requestAuthorization(toShare: writeTypes, read: readTypes)
             isAuthorized = true
+            await fetchBodyWeight()
         } catch {
             print("HealthKit authorization failed: \(error)")
         }
+    }
+
+    func fetchBodyWeight() async {
+        let type = HKQuantityType(.bodyMass)
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { [weak self] _, samples, _ in
+            guard let sample = samples?.first as? HKQuantitySample else { return }
+            let kg = sample.quantity.doubleValue(for: .gramUnit(with: .kilo))
+            Task { @MainActor in
+                self?.bodyWeightKg = kg
+            }
+        }
+        store.execute(query)
     }
 
     func saveWorkout(record: WorkoutRecord) async throws {

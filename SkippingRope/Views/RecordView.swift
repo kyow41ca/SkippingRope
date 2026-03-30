@@ -14,7 +14,7 @@ struct RecordView: View {
     private var jumpCount: Int { jumpDetector.jumpCount }
 
     private var calories: Double {
-        WorkoutRecord.calculateCalories(duration: elapsedTime)
+        WorkoutRecord.calculateCalories(duration: elapsedTime, weightKg: healthKit.bodyWeightKg)
     }
 
     private var pace: Double {
