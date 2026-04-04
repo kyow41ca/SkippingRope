@@ -257,13 +257,13 @@
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "なわとびのワークアウトをHealthKitに保存します。";
 				INFOPLIST_KEY_NSMotionUsageDescription = "加速度センサーでジャンプ回数を自動カウントします。";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "com.2y-systems.skippingrope.SkippingRopeWatchApp.SkippingRope";
+				INFOPLIST_KEY_WKWatchOnly = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.2y-systems.skippingrope.SkippingRopeWatchApp.SkippingRope.watchkitapp";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.2y-systems.skippingrope.SkippingRopeWatch";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -294,13 +294,13 @@
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "なわとびのワークアウトをHealthKitに保存します。";
 				INFOPLIST_KEY_NSMotionUsageDescription = "加速度センサーでジャンプ回数を自動カウントします。";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "com.2y-systems.skippingrope.SkippingRopeWatchApp.SkippingRope";
+				INFOPLIST_KEY_WKWatchOnly = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.2y-systems.skippingrope.SkippingRopeWatchApp.SkippingRope.watchkitapp";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.2y-systems.skippingrope.SkippingRopeWatch";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;

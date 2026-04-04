@@ -1,51 +1,27 @@
 import SwiftUI
+import SwiftData
 import HealthKit
 import CoreMotion
 
-// MARK: - Local Record Storage
+// MARK: - Model
 
-struct WatchWorkoutRecord: Codable, Identifiable {
-    var id: UUID
-    var date: Date
-    var duration: TimeInterval
-    var jumpCount: Int
-    var calories: Double
+@Model
+final class WatchWorkoutRecord {
+    var date: Date = Date()
+    var duration: TimeInterval = 0
+    var jumpCount: Int = 0
+    var calories: Double = 0
+
+    init(date: Date, duration: TimeInterval, jumpCount: Int, calories: Double) {
+        self.date = date
+        self.duration = duration
+        self.jumpCount = jumpCount
+        self.calories = calories
+    }
 
     var jumpsPerMinute: Double {
         guard duration > 0 else { return 0 }
         return Double(jumpCount) / (duration / 60)
-    }
-}
-
-@Observable
-final class WatchRecordStore {
-    static let shared = WatchRecordStore()
-    private let key = "watchWorkoutRecords"
-
-    private(set) var records: [WatchWorkoutRecord] = []
-
-    private init() { load() }
-
-    func add(_ record: WatchWorkoutRecord) {
-        records.insert(record, at: 0)
-        save()
-    }
-
-    func remove(atOffsets offsets: IndexSet) {
-        records.remove(atOffsets: offsets)
-        save()
-    }
-
-    private func save() {
-        if let data = try? JSONEncoder().encode(records) {
-            UserDefaults.standard.set(data, forKey: key)
-        }
-    }
-
-    private func load() {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let decoded = try? JSONDecoder().decode([WatchWorkoutRecord].self, from: data) else { return }
-        records = decoded
     }
 }
 
@@ -65,7 +41,6 @@ final class WatchWorkoutManager: NSObject {
     var calories: Double = 0
     private var bodyWeightKg: Double = 60.0
 
-    // ジャンプ検出パラメータ（iOS版と共通）
     private let threshold: Double = 1.7
     private let minimumJumpInterval: TimeInterval = 0.3
     private var wasAboveThreshold = false
@@ -152,15 +127,14 @@ final class WatchWorkoutManager: NSObject {
         }
     }
 
-    func save() {
+    func save(context: ModelContext) {
         let record = WatchWorkoutRecord(
-            id: UUID(),
             date: Date(),
             duration: elapsedTime,
             jumpCount: jumpCount,
             calories: calories
         )
-        WatchRecordStore.shared.add(record)
+        context.insert(record)
         reset()
     }
 
@@ -224,10 +198,11 @@ extension WatchWorkoutManager: HKLiveWorkoutBuilderDelegate {
     nonisolated func workoutBuilderDidCollectEvent(_ workoutBuilder: HKLiveWorkoutBuilder) {}
 }
 
-// MARK: - View
+// MARK: - Record View
 
 struct WatchRecordView: View {
     @State private var manager = WatchWorkoutManager()
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         VStack(spacing: 4) {
@@ -268,7 +243,7 @@ struct WatchRecordView: View {
             if !manager.isRunning && manager.elapsedTime > 0 {
                 HStack(spacing: 8) {
                     Button("保存") {
-                        manager.save()
+                        manager.save(context: modelContext)
                     }
                     .tint(.blue)
                     .buttonStyle(.bordered)
@@ -298,12 +273,13 @@ struct WatchRecordView: View {
 // MARK: - History View
 
 struct WatchHistoryView: View {
-    @State private var store = WatchRecordStore.shared
+    @Query(sort: \WatchWorkoutRecord.date, order: .reverse) private var records: [WatchWorkoutRecord]
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         NavigationStack {
             Group {
-                if store.records.isEmpty {
+                if records.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "figure.jumprope")
                             .font(.title2)
@@ -314,11 +290,13 @@ struct WatchHistoryView: View {
                     }
                 } else {
                     List {
-                        ForEach(store.records) { record in
+                        ForEach(records) { record in
                             WatchWorkoutRow(record: record)
                         }
                         .onDelete { offsets in
-                            store.remove(atOffsets: offsets)
+                            for index in offsets {
+                                modelContext.delete(records[index])
+                            }
                         }
                     }
                     .listStyle(.carousel)
