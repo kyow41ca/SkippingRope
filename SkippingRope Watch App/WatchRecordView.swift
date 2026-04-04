@@ -11,12 +11,14 @@ final class WatchWorkoutRecord {
     var duration: TimeInterval = 0
     var jumpCount: Int = 0
     var calories: Double = 0
+    var averageHeartRate: Double = 0
 
-    init(date: Date, duration: TimeInterval, jumpCount: Int, calories: Double) {
+    init(date: Date, duration: TimeInterval, jumpCount: Int, calories: Double, averageHeartRate: Double = 0) {
         self.date = date
         self.duration = duration
         self.jumpCount = jumpCount
         self.calories = calories
+        self.averageHeartRate = averageHeartRate
     }
 
     var jumpsPerMinute: Double {
@@ -39,6 +41,8 @@ final class WatchWorkoutManager: NSObject {
     var elapsedTime: TimeInterval = 0
     var jumpCount = 0
     var calories: Double = 0
+    var heartRate: Double = 0
+    var averageHeartRate: Double = 0
 
     private let threshold: Double = 1.7
     private let minimumJumpInterval: TimeInterval = 0.3
@@ -49,11 +53,13 @@ final class WatchWorkoutManager: NSObject {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         let shareTypes: Set<HKSampleType> = [
             HKObjectType.workoutType(),
-            HKQuantityType(.activeEnergyBurned)
+            HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.heartRate)
         ]
         let readTypes: Set<HKObjectType> = [
             HKObjectType.workoutType(),
-            HKQuantityType(.activeEnergyBurned)
+            HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.heartRate)
         ]
         try? await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
     }
@@ -66,10 +72,12 @@ final class WatchWorkoutManager: NSObject {
         do {
             let newSession = try HKWorkoutSession(healthStore: healthStore, configuration: config)
             let newBuilder = newSession.associatedWorkoutBuilder()
-            newBuilder.dataSource = HKLiveWorkoutDataSource(
+            let dataSource = HKLiveWorkoutDataSource(
                 healthStore: healthStore,
                 workoutConfiguration: config
             )
+            dataSource.enableCollection(for: HKQuantityType(.heartRate), predicate: nil)
+            newBuilder.dataSource = dataSource
             newSession.delegate = self
             newBuilder.delegate = self
             session = newSession
@@ -85,6 +93,8 @@ final class WatchWorkoutManager: NSObject {
         jumpCount = 0
         elapsedTime = 0
         calories = 0
+        heartRate = 0
+        averageHeartRate = 0
         wasAboveThreshold = false
         lastJumpTime = .distantPast
         isRunning = true
@@ -119,7 +129,8 @@ final class WatchWorkoutManager: NSObject {
             date: Date(),
             duration: elapsedTime,
             jumpCount: jumpCount,
-            calories: calories
+            calories: calories,
+            averageHeartRate: averageHeartRate
         )
         context.insert(record)
         reset()
@@ -129,6 +140,8 @@ final class WatchWorkoutManager: NSObject {
         elapsedTime = 0
         jumpCount = 0
         calories = 0
+        heartRate = 0
+        averageHeartRate = 0
         wasAboveThreshold = false
         lastJumpTime = .distantPast
     }
@@ -181,11 +194,26 @@ extension WatchWorkoutManager: HKLiveWorkoutBuilderDelegate {
         _ workoutBuilder: HKLiveWorkoutBuilder,
         didCollectDataOf collectedTypes: Set<HKSampleType>
     ) {
-        guard collectedTypes.contains(HKQuantityType(.activeEnergyBurned)) else { return }
-        let kcal = workoutBuilder.statistics(for: HKQuantityType(.activeEnergyBurned))?
-            .sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
+        var newCalories: Double?
+        var newHeartRate: Double?
+
+        if collectedTypes.contains(HKQuantityType(.activeEnergyBurned)) {
+            newCalories = workoutBuilder.statistics(for: HKQuantityType(.activeEnergyBurned))?
+                .sumQuantity()?.doubleValue(for: .kilocalorie())
+        }
+        if collectedTypes.contains(HKQuantityType(.heartRate)) {
+            let stats = workoutBuilder.statistics(for: HKQuantityType(.heartRate))
+            let unit = HKUnit.count().unitDivided(by: .minute())
+            newHeartRate = stats?.mostRecentQuantity()?.doubleValue(for: unit)
+            let avg = stats?.averageQuantity()?.doubleValue(for: unit)
+            DispatchQueue.main.async {
+                if let bpm = newHeartRate { self.heartRate = bpm }
+                if let avg { self.averageHeartRate = avg }
+            }
+        }
+
         DispatchQueue.main.async {
-            self.calories = kcal
+            if let kcal = newCalories { self.calories = kcal }
         }
     }
 
@@ -211,7 +239,7 @@ struct WatchRecordView: View {
                     .foregroundStyle(manager.isRunning ? .primary : .secondary)
             }
 
-            HStack(spacing: 20) {
+            HStack(spacing: 12) {
                 VStack(spacing: 0) {
                     Text("\(manager.jumpCount)")
                         .font(.title3.bold())
@@ -223,6 +251,18 @@ struct WatchRecordView: View {
                     Text(String(format: "%.0f", manager.calories))
                         .font(.title3.bold())
                     Text("kcal")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                VStack(spacing: 0) {
+                    HStack(spacing: 2) {
+                        Image(systemName: "heart.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                        Text(manager.heartRate > 0 ? String(format: "%.0f", manager.heartRate) : "--")
+                            .font(.title3.bold())
+                    }
+                    Text("bpm")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -319,6 +359,10 @@ struct WatchWorkoutRow: View {
                     .foregroundStyle(.orange)
                 Text(String(format: "%.0f/分", record.jumpsPerMinute))
                     .foregroundStyle(.secondary)
+                if record.averageHeartRate > 0 {
+                    Label(String(format: "%.0f bpm", record.averageHeartRate), systemImage: "heart.fill")
+                        .foregroundStyle(.red)
+                }
             }
             .font(.caption2)
         }
