@@ -123,7 +123,12 @@ final class WatchWorkoutManager: NSObject {
         let now = Date()
         session?.end()
         builder?.endCollection(withEnd: now) { [weak self] _, _ in
-            self?.builder?.finishWorkout { _, _ in }
+            self?.builder?.finishWorkout { [weak self] _, _ in
+                DispatchQueue.main.async {
+                    self?.session = nil
+                    self?.builder = nil
+                }
+            }
         }
     }
 
