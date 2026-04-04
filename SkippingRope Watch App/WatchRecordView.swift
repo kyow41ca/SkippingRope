@@ -1,7 +1,55 @@
 import SwiftUI
 import HealthKit
 import CoreMotion
-import WatchConnectivity
+
+// MARK: - Local Record Storage
+
+struct WatchWorkoutRecord: Codable, Identifiable {
+    var id: UUID
+    var date: Date
+    var duration: TimeInterval
+    var jumpCount: Int
+    var calories: Double
+
+    var jumpsPerMinute: Double {
+        guard duration > 0 else { return 0 }
+        return Double(jumpCount) / (duration / 60)
+    }
+}
+
+@Observable
+final class WatchRecordStore {
+    static let shared = WatchRecordStore()
+    private let key = "watchWorkoutRecords"
+
+    private(set) var records: [WatchWorkoutRecord] = []
+
+    private init() { load() }
+
+    func add(_ record: WatchWorkoutRecord) {
+        records.insert(record, at: 0)
+        save()
+    }
+
+    func remove(atOffsets offsets: IndexSet) {
+        records.remove(atOffsets: offsets)
+        save()
+    }
+
+    private func save() {
+        if let data = try? JSONEncoder().encode(records) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
+    private func load() {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let decoded = try? JSONDecoder().decode([WatchWorkoutRecord].self, from: data) else { return }
+        records = decoded
+    }
+}
+
+// MARK: - Workout Manager
 
 @Observable
 final class WatchWorkoutManager: NSObject {
@@ -105,8 +153,14 @@ final class WatchWorkoutManager: NSObject {
     }
 
     func save() {
-        let payload: (jumpCount: Int, duration: TimeInterval, calories: Double, date: Date) = (jumpCount, elapsedTime, calories, Date())
-        sendToPhone(payload)
+        let record = WatchWorkoutRecord(
+            id: UUID(),
+            date: Date(),
+            duration: elapsedTime,
+            jumpCount: jumpCount,
+            calories: calories
+        )
+        WatchRecordStore.shared.add(record)
         reset()
     }
 
@@ -116,21 +170,6 @@ final class WatchWorkoutManager: NSObject {
         calories = 0
         wasAboveThreshold = false
         lastJumpTime = .distantPast
-    }
-
-    private func sendToPhone(_ data: (jumpCount: Int, duration: TimeInterval, calories: Double, date: Date)) {
-        guard WCSession.isSupported(),
-              WCSession.default.activationState == .activated else { return }
-        let payload: [String: Any] = [
-            "jumpCount": data.jumpCount,
-            "duration": data.duration,
-            "calories": data.calories,
-            "date": data.date.timeIntervalSince1970
-        ]
-        WCSession.default.sendMessage(payload, replyHandler: nil, errorHandler: { _ in
-            // sendMessage が失敗した場合（iOSアプリが非アクティブ）はバックグラウンド転送にフォールバック
-            WCSession.default.transferUserInfo(payload)
-        })
     }
 
     private func startAccelerometer() {
@@ -253,6 +292,71 @@ struct WatchRecordView: View {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+}
+
+// MARK: - History View
+
+struct WatchHistoryView: View {
+    @State private var store = WatchRecordStore.shared
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if store.records.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "figure.jumprope")
+                            .font(.title2)
+                            .foregroundStyle(.secondary)
+                        Text("記録がありません")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    List {
+                        ForEach(store.records) { record in
+                            WatchWorkoutRow(record: record)
+                        }
+                        .onDelete { offsets in
+                            store.remove(atOffsets: offsets)
+                        }
+                    }
+                    .listStyle(.carousel)
+                }
+            }
+            .navigationTitle("履歴")
+        }
+    }
+}
+
+struct WatchWorkoutRow: View {
+    let record: WatchWorkoutRecord
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(record.date.formatted(date: .abbreviated, time: .shortened))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                Label("\(record.jumpCount)", systemImage: "figure.jumprope")
+                Label(timeString(record.duration), systemImage: "clock")
+            }
+            .font(.caption)
+            HStack(spacing: 8) {
+                Label(String(format: "%.0f kcal", record.calories), systemImage: "flame.fill")
+                    .foregroundStyle(.orange)
+                Text(String(format: "%.0f/分", record.jumpsPerMinute))
+                    .foregroundStyle(.secondary)
+            }
+            .font(.caption2)
+        }
+        .padding(.vertical, 2)
+    }
+
+    private func timeString(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }
 
