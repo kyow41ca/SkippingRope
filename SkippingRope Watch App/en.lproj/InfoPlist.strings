@@ -1,1 +1,3 @@
 CFBundleDisplayName = "Jump Rope";
+NSHealthShareUsageDescription = "Used to read workout data for jump rope sessions.";
+NSHealthUpdateUsageDescription = "Used to save workout data for jump rope sessions.";

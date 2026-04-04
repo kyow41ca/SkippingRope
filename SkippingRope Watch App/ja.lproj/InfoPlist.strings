@@ -1,1 +1,3 @@
 CFBundleDisplayName = "なわとび";
+NSHealthShareUsageDescription = "なわとびのワークアウトデータを読み取るために使用します。";
+NSHealthUpdateUsageDescription = "なわとびのワークアウトデータを記録するために使用します。";

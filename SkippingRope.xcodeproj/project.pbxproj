@@ -6,12 +6,41 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		197C90182F81499500151C5D /* SkippingRope Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 197C90172F81499500151C5D /* SkippingRope Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		197C90192F81499500151C5D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 197C900B2F81499400151C5D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 197C90162F81499500151C5D;
+			remoteInfo = "SkippingRope Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		197C90272F81499600151C5D /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				197C90182F81499500151C5D /* SkippingRope Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		199616D12F7A4A3A00BAFE75 /* SkippingRope Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SkippingRope Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		197C90112F81499500151C5D /* SkippingRope.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkippingRope.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		197C90172F81499500151C5D /* SkippingRope Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SkippingRope Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		199616D52F7A4A3A00BAFE75 /* SkippingRope Watch App */ = {
+		197C901B2F81499500151C5D /* SkippingRope Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "SkippingRope Watch App";
 			sourceTree = "<group>";
@@ -19,7 +48,7 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		199616CE2F7A4A3A00BAFE75 /* Frameworks */ = {
+		197C90142F81499500151C5D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -29,18 +58,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		199616BB2F7A4A3800BAFE75 = {
+		197C900A2F81499400151C5D = {
 			isa = PBXGroup;
 			children = (
-				199616D52F7A4A3A00BAFE75 /* SkippingRope Watch App */,
-				199616C52F7A4A3800BAFE75 /* Products */,
+				197C901B2F81499500151C5D /* SkippingRope Watch App */,
+				197C90122F81499500151C5D /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		199616C52F7A4A3800BAFE75 /* Products */ = {
+		197C90122F81499500151C5D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				199616D12F7A4A3A00BAFE75 /* SkippingRope Watch App.app */,
+				197C90112F81499500151C5D /* SkippingRope.app */,
+				197C90172F81499500151C5D /* SkippingRope Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,65 +78,97 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		199616D02F7A4A3A00BAFE75 /* SkippingRope Watch App */ = {
+		197C90102F81499500151C5D /* SkippingRope */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 199616DE2F7A4A3D00BAFE75 /* Build configuration list for PBXNativeTarget "SkippingRope Watch App" */;
+			buildConfigurationList = 197C90282F81499600151C5D /* Build configuration list for PBXNativeTarget "SkippingRope" */;
 			buildPhases = (
-				199616CD2F7A4A3A00BAFE75 /* Sources */,
-				199616CE2F7A4A3A00BAFE75 /* Frameworks */,
-				199616CF2F7A4A3A00BAFE75 /* Resources */,
+				197C900F2F81499500151C5D /* Resources */,
+				197C90272F81499600151C5D /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				197C901A2F81499500151C5D /* PBXTargetDependency */,
+			);
+			name = SkippingRope;
+			packageProductDependencies = (
+			);
+			productName = SkippingRope;
+			productReference = 197C90112F81499500151C5D /* SkippingRope.app */;
+			productType = "com.apple.product-type.application.watchapp2-container";
+		};
+		197C90162F81499500151C5D /* SkippingRope Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 197C90242F81499600151C5D /* Build configuration list for PBXNativeTarget "SkippingRope Watch App" */;
+			buildPhases = (
+				197C90132F81499500151C5D /* Sources */,
+				197C90142F81499500151C5D /* Frameworks */,
+				197C90152F81499500151C5D /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				199616D52F7A4A3A00BAFE75 /* SkippingRope Watch App */,
+				197C901B2F81499500151C5D /* SkippingRope Watch App */,
 			);
 			name = "SkippingRope Watch App";
 			packageProductDependencies = (
 			);
 			productName = "SkippingRope Watch App";
-			productReference = 199616D12F7A4A3A00BAFE75 /* SkippingRope Watch App.app */;
+			productReference = 197C90172F81499500151C5D /* SkippingRope Watch App.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		199616BC2F7A4A3800BAFE75 /* Project object */ = {
+		197C900B2F81499400151C5D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 2600;
+				LastSwiftUpdateCheck = 2640;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
-					199616D02F7A4A3A00BAFE75 = {
-						CreatedOnToolsVersion = 26.0.1;
+					197C90102F81499500151C5D = {
+						CreatedOnToolsVersion = 26.4;
+					};
+					197C90162F81499500151C5D = {
+						CreatedOnToolsVersion = 26.4;
 					};
 				};
 			};
-			buildConfigurationList = 199616BF2F7A4A3800BAFE75 /* Build configuration list for PBXProject "SkippingRope" */;
+			buildConfigurationList = 197C900E2F81499400151C5D /* Build configuration list for PBXProject "SkippingRope" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 				ja,
+				"en 2",
+				"ja 2",
 			);
-			mainGroup = 199616BB2F7A4A3800BAFE75;
+			mainGroup = 197C900A2F81499400151C5D;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 199616C52F7A4A3800BAFE75 /* Products */;
+			productRefGroup = 197C90122F81499500151C5D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				199616D02F7A4A3A00BAFE75 /* SkippingRope Watch App */,
+				197C90102F81499500151C5D /* SkippingRope */,
+				197C90162F81499500151C5D /* SkippingRope Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		199616CF2F7A4A3A00BAFE75 /* Resources */ = {
+		197C900F2F81499500151C5D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		197C90152F81499500151C5D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -116,7 +178,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		199616CD2F7A4A3A00BAFE75 /* Sources */ = {
+		197C90132F81499500151C5D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -125,8 +187,16 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		197C901A2F81499500151C5D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 197C90162F81499500151C5D /* SkippingRope Watch App */;
+			targetProxy = 197C90192F81499500151C5D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		199616DC2F7A4A3D00BAFE75 /* Debug */ = {
+		197C90222F81499600151C5D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -188,7 +258,7 @@
 			};
 			name = Debug;
 		};
-		199616DD2F7A4A3D00BAFE75 /* Release */ = {
+		197C90232F81499600151C5D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -242,7 +312,7 @@
 			};
 			name = Release;
 		};
-		199616DF2F7A4A3D00BAFE75 /* Debug */ = {
+		197C90252F81499600151C5D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -254,9 +324,6 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = SkippingRope;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "なわとびのワークアウトデータを読み取ります。";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "なわとびのワークアウトをHealthKitに保存します。";
-				INFOPLIST_KEY_NSMotionUsageDescription = "加速度センサーでジャンプ回数を自動カウントします。";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKWatchOnly = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -264,10 +331,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.2y-systems.skippingrope.SkippingRopeWatch";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.2y-systems.skippingrope.SkippingRopeWatch.SkippingRope.watchkitapp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
-				SKIP_INSTALL = NO;
+				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -275,11 +342,11 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				WATCHOS_DEPLOYMENT_TARGET = 26.4;
 			};
 			name = Debug;
 		};
-		199616E02F7A4A3D00BAFE75 /* Release */ = {
+		197C90262F81499600151C5D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -291,9 +358,6 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = SkippingRope;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "なわとびのワークアウトデータを読み取ります。";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "なわとびのワークアウトをHealthKitに保存します。";
-				INFOPLIST_KEY_NSMotionUsageDescription = "加速度センサーでジャンプ回数を自動カウントします。";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKWatchOnly = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -301,10 +365,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.2y-systems.skippingrope.SkippingRopeWatch";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.2y-systems.skippingrope.SkippingRopeWatch.SkippingRope.watchkitapp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
-				SKIP_INSTALL = NO;
+				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -313,32 +377,76 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
 				VALIDATE_PRODUCT = YES;
-				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				WATCHOS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Release;
+		};
+		197C90292F81499600151C5D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZQYAYZMHPA;
+				INFOPLIST_KEY_CFBundleDisplayName = SkippingRope;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.2y-systems.skippingrope.SkippingRopeWatch.SkippingRope";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		197C902A2F81499600151C5D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZQYAYZMHPA;
+				INFOPLIST_KEY_CFBundleDisplayName = SkippingRope;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.2y-systems.skippingrope.SkippingRopeWatch.SkippingRope";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		199616BF2F7A4A3800BAFE75 /* Build configuration list for PBXProject "SkippingRope" */ = {
+		197C900E2F81499400151C5D /* Build configuration list for PBXProject "SkippingRope" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				199616DC2F7A4A3D00BAFE75 /* Debug */,
-				199616DD2F7A4A3D00BAFE75 /* Release */,
+				197C90222F81499600151C5D /* Debug */,
+				197C90232F81499600151C5D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		199616DE2F7A4A3D00BAFE75 /* Build configuration list for PBXNativeTarget "SkippingRope Watch App" */ = {
+		197C90242F81499600151C5D /* Build configuration list for PBXNativeTarget "SkippingRope Watch App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				199616DF2F7A4A3D00BAFE75 /* Debug */,
-				199616E02F7A4A3D00BAFE75 /* Release */,
+				197C90252F81499600151C5D /* Debug */,
+				197C90262F81499600151C5D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		197C90282F81499600151C5D /* Build configuration list for PBXNativeTarget "SkippingRope" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				197C90292F81499600151C5D /* Debug */,
+				197C902A2F81499600151C5D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 199616BC2F7A4A3800BAFE75 /* Project object */;
+	rootObject = 197C900B2F81499400151C5D /* Project object */;
 }
