@@ -324,6 +324,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = SkippingRope;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Used to read workout data for jump rope sessions.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Used to save workout data for jump rope sessions.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKWatchOnly = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -358,6 +360,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = SkippingRope;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Used to read workout data for jump rope sessions.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Used to save workout data for jump rope sessions.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKWatchOnly = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
