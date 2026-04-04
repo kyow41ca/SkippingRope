@@ -39,7 +39,6 @@ final class WatchWorkoutManager: NSObject {
     var elapsedTime: TimeInterval = 0
     var jumpCount = 0
     var calories: Double = 0
-    private var bodyWeightKg: Double = 60.0
 
     private let threshold: Double = 1.7
     private let minimumJumpInterval: TimeInterval = 0.3
@@ -54,24 +53,9 @@ final class WatchWorkoutManager: NSObject {
         ]
         let readTypes: Set<HKObjectType> = [
             HKObjectType.workoutType(),
-            HKQuantityType(.activeEnergyBurned),
-            HKQuantityType(.bodyMass)
+            HKQuantityType(.activeEnergyBurned)
         ]
         try? await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
-        await fetchBodyWeight()
-    }
-
-    func fetchBodyWeight() async {
-        let type = HKQuantityType(.bodyMass)
-        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
-        let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { [weak self] _, samples, _ in
-            guard let sample = samples?.first as? HKQuantitySample else { return }
-            let kg = sample.quantity.doubleValue(for: .gramUnit(with: .kilo))
-            DispatchQueue.main.async {
-                self?.bodyWeightKg = kg
-            }
-        }
-        healthStore.execute(query)
     }
 
     func start() {
@@ -106,9 +90,7 @@ final class WatchWorkoutManager: NSObject {
         isRunning = true
 
         clockTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            self.elapsedTime += 0.5
-            self.calories = 11.0 * self.bodyWeightKg * (self.elapsedTime / 3600)
+            self?.elapsedTime += 0.5
         }
 
         startAccelerometer()
@@ -198,7 +180,14 @@ extension WatchWorkoutManager: HKLiveWorkoutBuilderDelegate {
     nonisolated func workoutBuilder(
         _ workoutBuilder: HKLiveWorkoutBuilder,
         didCollectDataOf collectedTypes: Set<HKSampleType>
-    ) {}
+    ) {
+        guard collectedTypes.contains(HKQuantityType(.activeEnergyBurned)) else { return }
+        let kcal = workoutBuilder.statistics(for: HKQuantityType(.activeEnergyBurned))?
+            .sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
+        DispatchQueue.main.async {
+            self.calories = kcal
+        }
+    }
 
     nonisolated func workoutBuilderDidCollectEvent(_ workoutBuilder: HKLiveWorkoutBuilder) {}
 }
