@@ -1,0 +1,12 @@
+/* Workout controls */
+"Start" = "Start";
+"Stop" = "Stop";
+"Save" = "Save";
+"Reset" = "Reset";
+
+/* Units */
+"jumps" = "jumps";
+
+/* History */
+"History" = "History";
+"No Records" = "No Records";

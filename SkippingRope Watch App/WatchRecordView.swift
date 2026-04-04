@@ -215,7 +215,7 @@ struct WatchRecordView: View {
                 VStack(spacing: 0) {
                     Text("\(manager.jumpCount)")
                         .font(.title3.bold())
-                    Text("回")
+                    Text("jumps")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -228,7 +228,7 @@ struct WatchRecordView: View {
                 }
             }
 
-            Button(manager.isRunning ? "停止" : "開始") {
+            Button(manager.isRunning ? "Stop" : "Start") {
                 if manager.isRunning { manager.stop() } else { manager.start() }
             }
             .tint(manager.isRunning ? .red : .green)
@@ -236,14 +236,14 @@ struct WatchRecordView: View {
 
             if !manager.isRunning && manager.elapsedTime > 0 {
                 HStack(spacing: 8) {
-                    Button("保存") {
+                    Button("Save") {
                         manager.save(context: modelContext)
                     }
                     .tint(.blue)
                     .buttonStyle(.bordered)
                     .font(.footnote)
 
-                    Button("リセット", role: .destructive) {
+                    Button("Reset", role: .destructive) {
                         manager.reset()
                     }
                     .buttonStyle(.bordered)
@@ -278,7 +278,7 @@ struct WatchHistoryView: View {
                         Image(systemName: "figure.jumprope")
                             .font(.title2)
                             .foregroundStyle(.secondary)
-                        Text("記録がありません")
+                        Text("No Records")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -296,7 +296,7 @@ struct WatchHistoryView: View {
                     .listStyle(.carousel)
                 }
             }
-            .navigationTitle("履歴")
+            .navigationTitle("History")
         }
     }
 }

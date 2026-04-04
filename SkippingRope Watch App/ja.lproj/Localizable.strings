@@ -1,0 +1,12 @@
+/* Workout controls */
+"Start" = "開始";
+"Stop" = "停止";
+"Save" = "保存";
+"Reset" = "リセット";
+
+/* Units */
+"jumps" = "回";
+
+/* History */
+"History" = "履歴";
+"No Records" = "記録がありません";
