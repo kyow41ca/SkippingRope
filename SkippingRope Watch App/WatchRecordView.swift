@@ -269,7 +269,6 @@ struct WatchRecordView: View {
                 Image(systemName: "figure.jumprope")
                     .font(.system(size: 24))
                     .foregroundStyle(manager.isRunning ? .blue : .gray)
-                    .symbolEffect(.variableColor.iterative, isActive: manager.isRunning)
 
                 Text(timeString(manager.elapsedTime))
                     .font(.system(size: 28, weight: .thin, design: .monospaced))
