@@ -38,6 +38,7 @@ final class WatchWorkoutManager: NSObject {
     private var clockTimer: Timer?
 
     var isRunning = false
+    var isPaused = false
     var elapsedTime: TimeInterval = 0
     var jumpCount = 0
     var calories: Double = 0
@@ -107,8 +108,36 @@ final class WatchWorkoutManager: NSObject {
         startAccelerometer()
     }
 
-    func stop() {
+    func pause() {
+        clockTimer?.invalidate()
+        clockTimer = nil
+        motionManager.stopAccelerometerUpdates()
+        session?.pause()
+    }
+
+    func resume() {
+        session?.resume()
+    }
+
+    func save(context: ModelContext) {
+        let record = WatchWorkoutRecord(
+            date: Date(),
+            duration: elapsedTime,
+            jumpCount: jumpCount,
+            calories: calories,
+            averageHeartRate: averageHeartRate
+        )
+        context.insert(record)
+        endSessionAndReset()
+    }
+
+    func reset() {
+        endSessionAndReset()
+    }
+
+    private func endSessionAndReset() {
         isRunning = false
+        isPaused = false
         clockTimer?.invalidate()
         clockTimer = nil
         motionManager.stopAccelerometerUpdates()
@@ -123,21 +152,7 @@ final class WatchWorkoutManager: NSObject {
                 }
             }
         }
-    }
 
-    func save(context: ModelContext) {
-        let record = WatchWorkoutRecord(
-            date: Date(),
-            duration: elapsedTime,
-            jumpCount: jumpCount,
-            calories: calories,
-            averageHeartRate: averageHeartRate
-        )
-        context.insert(record)
-        reset()
-    }
-
-    func reset() {
         elapsedTime = 0
         jumpCount = 0
         calories = 0
@@ -180,7 +195,28 @@ extension WatchWorkoutManager: HKWorkoutSessionDelegate {
         didChangeTo toState: HKWorkoutSessionState,
         from fromState: HKWorkoutSessionState,
         date: Date
-    ) {}
+    ) {
+        Task { @MainActor in
+            switch toState {
+            case .paused:
+                isRunning = false
+                isPaused = true
+                clockTimer?.invalidate()
+                clockTimer = nil
+                motionManager.stopAccelerometerUpdates()
+            case .running:
+                isRunning = true
+                isPaused = false
+                startAccelerometer()
+                clockTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+                    guard let self else { return }
+                    self.elapsedTime = self.builder?.elapsedTime(at: Date()) ?? 0
+                }
+            default:
+                break
+            }
+        }
+    }
 
     nonisolated func workoutSession(
         _ workoutSession: HKWorkoutSession,
@@ -269,27 +305,28 @@ struct WatchRecordView: View {
                 }
             }
 
-            Button(manager.isRunning ? "Stop" : "Start") {
-                if manager.isRunning { manager.stop() } else { manager.start() }
-            }
-            .tint(manager.isRunning ? .red : .green)
-            .buttonStyle(.bordered)
-
-            if !manager.isRunning && manager.elapsedTime > 0 {
+            if manager.isRunning {
+                Button("Pause") { manager.pause() }
+                    .tint(.orange)
+                    .buttonStyle(.bordered)
+            } else if manager.isPaused {
                 HStack(spacing: 8) {
-                    Button("Save") {
-                        manager.save(context: modelContext)
-                    }
+                    Button("Resume") { manager.resume() }
+                        .tint(.green)
+                        .buttonStyle(.bordered)
+                        .font(.footnote)
+                    Button("Reset", role: .destructive) { manager.reset() }
+                        .buttonStyle(.bordered)
+                        .font(.footnote)
+                }
+                Button("Save") { manager.save(context: modelContext) }
                     .tint(.blue)
                     .buttonStyle(.bordered)
                     .font(.footnote)
-
-                    Button("Reset", role: .destructive) {
-                        manager.reset()
-                    }
+            } else {
+                Button("Start") { manager.start() }
+                    .tint(.green)
                     .buttonStyle(.bordered)
-                    .font(.footnote)
-                }
             }
         }
         .navigationBarHidden(true)

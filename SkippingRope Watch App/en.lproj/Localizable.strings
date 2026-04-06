@@ -1,6 +1,7 @@
 /* Workout controls */
 "Start" = "Start";
-"Stop" = "Stop";
+"Pause" = "Pause";
+"Resume" = "Resume";
 "Save" = "Save";
 "Reset" = "Reset";
 

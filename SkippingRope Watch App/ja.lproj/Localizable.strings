@@ -1,6 +1,7 @@
 /* Workout controls */
 "Start" = "開始";
-"Stop" = "停止";
+"Pause" = "一時停止";
+"Resume" = "再開";
 "Save" = "保存";
 "Reset" = "リセット";
 
