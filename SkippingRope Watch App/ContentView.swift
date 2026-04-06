@@ -1,10 +1,14 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var manager = WatchWorkoutManager()
+
     var body: some View {
         TabView {
-            WatchRecordView()
-            WatchHistoryView()
+            WatchRecordView(manager: manager)
+            if !manager.isRunning {
+                WatchHistoryView()
+            }
         }
         .tabViewStyle(.verticalPage)
     }

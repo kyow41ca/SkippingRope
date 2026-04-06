@@ -224,7 +224,7 @@ extension WatchWorkoutManager: HKLiveWorkoutBuilderDelegate {
 // MARK: - Record View
 
 struct WatchRecordView: View {
-    @State private var manager = WatchWorkoutManager()
+    var manager: WatchWorkoutManager
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
@@ -379,6 +379,6 @@ struct WatchWorkoutRow: View {
 
 #Preview {
     NavigationStack {
-        WatchRecordView()
+        WatchRecordView(manager: WatchWorkoutManager())
     }
 }
