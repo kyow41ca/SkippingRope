@@ -100,7 +100,8 @@ final class WatchWorkoutManager: NSObject {
         isRunning = true
 
         clockTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            self?.elapsedTime += 0.5
+            guard let self else { return }
+            self.elapsedTime = self.builder?.elapsedTime(at: Date()) ?? 0
         }
 
         startAccelerometer()
