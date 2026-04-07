@@ -309,19 +309,12 @@ struct WatchRecordView: View {
                     .tint(.orange)
                     .buttonStyle(.bordered)
             } else if manager.isPaused {
-                HStack(spacing: 8) {
-                    Button("Resume") { manager.resume() }
-                        .tint(.green)
-                        .buttonStyle(.bordered)
-                        .font(.footnote)
-                    Button("Reset", role: .destructive) { manager.reset() }
-                        .buttonStyle(.bordered)
-                        .font(.footnote)
-                }
+                Button("Resume") { manager.resume() }
+                    .tint(.green)
+                    .buttonStyle(.bordered)
                 Button("Save") { manager.save(context: modelContext) }
                     .tint(.blue)
                     .buttonStyle(.bordered)
-                    .font(.footnote)
             } else {
                 Button("Start") { manager.start() }
                     .tint(.green)
