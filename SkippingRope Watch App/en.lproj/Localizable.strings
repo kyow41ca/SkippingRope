@@ -1,9 +1,10 @@
 /* Workout controls */
 "Start" = "Start";
-"Tap to skip" = "Tap to skip";
 "Pause" = "Pause";
 "Resume" = "Resume";
 "Save" = "Save";
+"Goal" = "Goal";
+"Tap to skip" = "Tap to skip";
 
 /* Units */
 "jumps" = "jumps";
@@ -11,3 +12,9 @@
 /* History */
 "History" = "History";
 "No Records" = "No Records";
+
+/* Goal */
+"Jump Count" = "Jump Count";
+"Time" = "Time";
+"Calories" = "Calories";
+"Goal Achieved!" = "Goal Achieved!";

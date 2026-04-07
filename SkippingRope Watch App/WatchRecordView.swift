@@ -28,6 +28,80 @@ final class WatchWorkoutRecord {
     }
 }
 
+// MARK: - Goal
+
+enum WorkoutGoal: Hashable {
+    case none
+    case jumps(Int)
+    case time(TimeInterval)
+    case calories(Double)
+}
+
+enum GoalKind: Hashable {
+    case jumps, time, calories
+
+    var localizedLabel: LocalizedStringKey {
+        switch self {
+        case .jumps: "Jump Count"
+        case .time: "Time"
+        case .calories: "Calories"
+        }
+    }
+
+    var defaultValue: Double {
+        switch self {
+        case .jumps: 100
+        case .time: 300
+        case .calories: 100
+        }
+    }
+
+    var buttonStep: Double {
+        switch self {
+        case .jumps: 10
+        case .time: 60
+        case .calories: 10
+        }
+    }
+
+    var minValue: Double {
+        switch self {
+        case .jumps: 10
+        case .time: 60
+        case .calories: 10
+        }
+    }
+
+    var maxValue: Double {
+        switch self {
+        case .jumps: 9_990
+        case .time: 5_940    // 99 min
+        case .calories: 9_990
+        }
+    }
+
+    func formatted(_ value: Double) -> String {
+        switch self {
+        case .jumps: return "\(Int(value))"
+        case .time:
+            let m = Int(value) / 60
+            let s = Int(value) % 60
+            return s == 0 ? "\(m):00" : String(format: "%d:%02d", m, s)
+        case .calories: return "\(Int(value))"
+        }
+    }
+
+    func makeGoal(_ value: Double) -> WorkoutGoal {
+        switch self {
+        case .jumps: return .jumps(Int(value))
+        case .time: return .time(value)
+        case .calories: return .calories(value)
+        }
+    }
+
+}
+
+
 // MARK: - Workout Manager
 
 @Observable
@@ -48,6 +122,10 @@ final class WatchWorkoutManager: NSObject {
     var calories: Double = 0
     var heartRate: Double = 0
     var averageHeartRate: Double = 0
+
+    var goal: WorkoutGoal = .none
+    var showingGoalAchievement = false
+    private var goalAchievedOnce = false
 
     private let threshold: Double = 1.7
     private let minimumJumpInterval: TimeInterval = 0.3
@@ -130,11 +208,13 @@ final class WatchWorkoutManager: NSObject {
         averageHeartRate = 0
         wasAboveThreshold = false
         lastJumpTime = .distantPast
+        goalAchievedOnce = false
         isRunning = true
 
         clockTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.elapsedTime = self.builder?.elapsedTime(at: Date()) ?? 0
+            self.checkGoal()
         }
 
         startAccelerometer()
@@ -172,6 +252,24 @@ final class WatchWorkoutManager: NSObject {
         endSessionAndReset()
     }
 
+    private func checkGoal() {
+        guard !goalAchievedOnce, isRunning else { return }
+        let achieved: Bool
+        switch goal {
+        case .none: return
+        case .jumps(let t): achieved = jumpCount >= t
+        case .time(let t): achieved = elapsedTime >= t
+        case .calories(let t): achieved = calories >= t
+        }
+        guard achieved else { return }
+        goalAchievedOnce = true
+        showingGoalAchievement = true
+        WKInterfaceDevice.current().play(.success)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            self?.showingGoalAchievement = false
+        }
+    }
+
     private func endSessionAndReset() {
         isRunning = false
         isPaused = false
@@ -181,6 +279,9 @@ final class WatchWorkoutManager: NSObject {
         clockTimer?.invalidate()
         clockTimer = nil
         motionManager.stopAccelerometerUpdates()
+        showingGoalAchievement = false
+        goalAchievedOnce = false
+        goal = .none
 
         let now = Date()
         session?.end()
@@ -220,6 +321,7 @@ final class WatchWorkoutManager: NSObject {
                 if now.timeIntervalSince(lastJumpTime) >= minimumJumpInterval {
                     lastJumpTime = now
                     jumpCount += 1
+                    checkGoal()
                 }
             }
             wasAboveThreshold = true
@@ -251,6 +353,7 @@ extension WatchWorkoutManager: HKWorkoutSessionDelegate {
                 clockTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
                     guard let self else { return }
                     self.elapsedTime = self.builder?.elapsedTime(at: Date()) ?? 0
+                    self.checkGoal()
                 }
             default:
                 break
@@ -290,7 +393,10 @@ extension WatchWorkoutManager: HKLiveWorkoutBuilderDelegate {
         }
 
         DispatchQueue.main.async {
-            if let kcal = newCalories { self.calories = kcal }
+            if let kcal = newCalories {
+                self.calories = kcal
+                self.checkGoal()
+            }
         }
     }
 
@@ -302,46 +408,53 @@ extension WatchWorkoutManager: HKLiveWorkoutBuilderDelegate {
 struct WatchRecordView: View {
     var manager: WatchWorkoutManager
     @Environment(\.modelContext) private var modelContext
+    @State private var showingGoalSheet = false
 
     var body: some View {
         VStack(spacing: 4) {
-            HStack(spacing: 8) {
-                Image(systemName: "figure.jumprope")
-                    .font(.system(size: 24))
-                    .foregroundStyle(manager.isRunning ? .blue : .gray)
+            if manager.isRunning || manager.isPaused {
+                HStack(spacing: 8) {
+                    Image(systemName: "figure.jumprope")
+                        .font(.system(size: 24))
+                        .foregroundStyle(manager.isRunning ? .blue : .gray)
 
-                Text(timeString(manager.elapsedTime))
-                    .font(.system(size: 28, weight: .thin, design: .monospaced))
-                    .foregroundStyle(manager.isRunning ? .primary : .secondary)
-            }
+                    Text(timeString(manager.elapsedTime))
+                        .font(.system(size: 28, weight: .thin, design: .monospaced))
+                        .foregroundStyle(manager.isRunning ? .primary : .secondary)
+                }
 
-            HStack(spacing: 12) {
-                VStack(spacing: 0) {
-                    Text("\(manager.jumpCount)")
-                        .font(.title3.bold())
-                    Text("jumps")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                VStack(spacing: 0) {
-                    Text(String(format: "%.0f", manager.calories))
-                        .font(.title3.bold())
-                    Text("kcal")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                VStack(spacing: 0) {
-                    HStack(spacing: 2) {
-                        Image(systemName: "heart.fill")
-                            .font(.caption2)
-                            .foregroundStyle(.red)
-                        Text(manager.heartRate > 0 ? String(format: "%.0f", manager.heartRate) : "--")
+                HStack(spacing: 12) {
+                    VStack(spacing: 0) {
+                        Text("\(manager.jumpCount)")
                             .font(.title3.bold())
+                        Text("jumps")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
-                    Text("bpm")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    VStack(spacing: 0) {
+                        Text(String(format: "%.0f", manager.calories))
+                            .font(.title3.bold())
+                        Text("kcal")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    VStack(spacing: 0) {
+                        HStack(spacing: 2) {
+                            Image(systemName: "heart.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.red)
+                            Text(manager.heartRate > 0 ? String(format: "%.0f", manager.heartRate) : "--")
+                                .font(.title3.bold())
+                        }
+                        Text("bpm")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
+            } else {
+                Image(systemName: "figure.jumprope")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.gray)
             }
 
             if manager.isRunning {
@@ -356,17 +469,32 @@ struct WatchRecordView: View {
                     .tint(.blue)
                     .buttonStyle(.bordered)
             } else {
-                Button("Start") { manager.beginCountdown() }
-                    .tint(.green)
+                Button("Start") {
+                    manager.goal = .none
+                    manager.beginCountdown()
+                }
+                .tint(.green)
+                .buttonStyle(.bordered)
+                Button("Goal") { showingGoalSheet = true }
+                    .tint(.blue)
                     .buttonStyle(.bordered)
             }
         }
-        .navigationBarHidden(true)
+        .sheet(isPresented: $showingGoalSheet) {
+            NavigationStack {
+                GoalSelectionView(manager: manager, isSheetPresented: $showingGoalSheet)
+            }
+        }
         .overlay {
             if manager.isCountingDown {
                 CountdownOverlay(value: manager.countdownValue, onSkip: manager.skipCountdown)
             }
+            if manager.showingGoalAchievement {
+                GoalAchievedOverlay(goal: manager.goal)
+                    .transition(.opacity)
+            }
         }
+        .animation(.easeInOut(duration: 0.4), value: manager.showingGoalAchievement)
         .task {
             await manager.requestAuthorization()
         }
@@ -379,7 +507,102 @@ struct WatchRecordView: View {
     }
 }
 
-// MARK: - History View
+// MARK: - Goal Selection View
+
+struct GoalSelectionView: View {
+    var manager: WatchWorkoutManager
+    @Binding var isSheetPresented: Bool
+
+    var body: some View {
+        List {
+            NavigationLink(String(localized: "Jump Count")) {
+                GoalValueView(manager: manager, kind: .jumps, isSheetPresented: $isSheetPresented)
+            }
+            NavigationLink(String(localized: "Time")) {
+                GoalValueView(manager: manager, kind: .time, isSheetPresented: $isSheetPresented)
+            }
+            NavigationLink(String(localized: "Calories")) {
+                GoalValueView(manager: manager, kind: .calories, isSheetPresented: $isSheetPresented)
+            }
+        }
+        .navigationTitle("Goal")
+    }
+}
+
+// MARK: - Goal Value View
+
+struct GoalValueView: View {
+    var manager: WatchWorkoutManager
+    let kind: GoalKind
+    @Binding var isSheetPresented: Bool
+    @State private var value: Double
+
+    private var values: [Double] {
+        Array(stride(from: kind.minValue, through: kind.maxValue, by: kind.buttonStep))
+    }
+
+    init(manager: WatchWorkoutManager, kind: GoalKind, isSheetPresented: Binding<Bool>) {
+        self.manager = manager
+        self.kind = kind
+        self._isSheetPresented = isSheetPresented
+        self._value = State(initialValue: kind.defaultValue)
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Picker("", selection: $value) {
+                ForEach(values, id: \.self) { v in
+                    Text(kind.formatted(v)).tag(v)
+                }
+            }
+            .pickerStyle(.wheel)
+            .labelsHidden()
+
+            Button("Start") {
+                manager.goal = kind.makeGoal(value)
+                isSheetPresented = false
+                manager.beginCountdown()
+            }
+            .tint(.green)
+            .buttonStyle(.bordered)
+        }
+        .navigationTitle(kind.localizedLabel)
+    }
+}
+
+// MARK: - Goal Achieved Overlay
+
+struct GoalAchievedOverlay: View {
+    let goal: WorkoutGoal
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.92).ignoresSafeArea()
+            VStack(spacing: 8) {
+                Image(systemName: "trophy.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.yellow)
+                Text("Goal Achieved!")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                Text(goalText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var goalText: String {
+        switch goal {
+        case .none: return ""
+        case .jumps(let n): return "\(n) " + String(localized: "jumps")
+        case .time(let t):
+            let m = Int(t) / 60; let s = Int(t) % 60
+            return s == 0 ? "\(m):00" : String(format: "%d:%02d", m, s)
+        case .calories(let c): return "\(Int(c)) kcal"
+        }
+    }
+}
 
 // MARK: - Countdown Overlay
 
@@ -414,15 +637,11 @@ struct CountdownOverlay: View {
             }
         }
         .onAppear {
-            withAnimation(.linear(duration: 1.0)) {
-                trimEnd = 1.0 / 3.0
-            }
+            withAnimation(.linear(duration: 1.0)) { trimEnd = 1.0 / 3.0 }
         }
         .onChange(of: value) { _, newValue in
             let target = CGFloat(3 - newValue + 1) / 3.0
-            withAnimation(.linear(duration: 1.0)) {
-                trimEnd = target
-            }
+            withAnimation(.linear(duration: 1.0)) { trimEnd = target }
         }
         .onTapGesture(perform: onSkip)
     }
@@ -501,7 +720,5 @@ struct WatchWorkoutRow: View {
 }
 
 #Preview {
-    NavigationStack {
-        WatchRecordView(manager: WatchWorkoutManager())
-    }
+    WatchRecordView(manager: WatchWorkoutManager())
 }

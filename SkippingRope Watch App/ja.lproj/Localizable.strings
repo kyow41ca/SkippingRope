@@ -1,9 +1,10 @@
 /* Workout controls */
 "Start" = "開始";
-"Tap to skip" = "タップでスキップ";
 "Pause" = "一時停止";
 "Resume" = "再開";
 "Save" = "保存";
+"Goal" = "ゴール設定";
+"Tap to skip" = "タップでスキップ";
 
 /* Units */
 "jumps" = "回";
@@ -11,3 +12,9 @@
 /* History */
 "History" = "履歴";
 "No Records" = "記録がありません";
+
+/* Goal */
+"Jump Count" = "回数";
+"Time" = "時間";
+"Calories" = "カロリー";
+"Goal Achieved!" = "達成！";
