@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import HealthKit
 import CoreMotion
+import WatchKit
 
 // MARK: - Model
 
@@ -39,6 +40,9 @@ final class WatchWorkoutManager: NSObject {
 
     var isRunning = false
     var isPaused = false
+    var isCountingDown = false
+    var countdownValue = 3
+    private var countdownTimer: Timer?
     var elapsedTime: TimeInterval = 0
     var jumpCount = 0
     var calories: Double = 0
@@ -63,6 +67,34 @@ final class WatchWorkoutManager: NSObject {
             HKQuantityType(.heartRate)
         ]
         try? await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
+    }
+
+    func beginCountdown() {
+        isCountingDown = true
+        countdownValue = 3
+        WKInterfaceDevice.current().play(.notification)
+
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.countdownValue -= 1
+            if self.countdownValue <= 0 {
+                self.countdownTimer?.invalidate()
+                self.countdownTimer = nil
+                self.isCountingDown = false
+                WKInterfaceDevice.current().play(.directionUp)
+                self.start()
+            } else {
+                WKInterfaceDevice.current().play(.notification)
+            }
+        }
+    }
+
+    func skipCountdown() {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+        isCountingDown = false
+        WKInterfaceDevice.current().play(.directionUp)
+        start()
     }
 
     func start() {
@@ -128,6 +160,7 @@ final class WatchWorkoutManager: NSObject {
             averageHeartRate: averageHeartRate
         )
         context.insert(record)
+        WKInterfaceDevice.current().play(.success)
         endSessionAndReset()
     }
 
@@ -138,6 +171,9 @@ final class WatchWorkoutManager: NSObject {
     private func endSessionAndReset() {
         isRunning = false
         isPaused = false
+        isCountingDown = false
+        countdownTimer?.invalidate()
+        countdownTimer = nil
         clockTimer?.invalidate()
         clockTimer = nil
         motionManager.stopAccelerometerUpdates()
@@ -316,12 +352,17 @@ struct WatchRecordView: View {
                     .tint(.blue)
                     .buttonStyle(.bordered)
             } else {
-                Button("Start") { manager.start() }
+                Button("Start") { manager.beginCountdown() }
                     .tint(.green)
                     .buttonStyle(.bordered)
             }
         }
         .navigationBarHidden(true)
+        .overlay {
+            if manager.isCountingDown {
+                CountdownOverlay(value: manager.countdownValue, onSkip: manager.skipCountdown)
+            }
+        }
         .task {
             await manager.requestAuthorization()
         }
@@ -331,6 +372,55 @@ struct WatchRecordView: View {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+}
+
+// MARK: - History View
+
+// MARK: - Countdown Overlay
+
+struct CountdownOverlay: View {
+    let value: Int
+    let onSkip: () -> Void
+    @State private var trimEnd: CGFloat = 0
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            VStack(spacing: 6) {
+                ZStack {
+                    Circle()
+                        .stroke(Color.white.opacity(0.2), lineWidth: 4)
+                        .frame(width: 88, height: 88)
+                    Circle()
+                        .trim(from: 0, to: trimEnd)
+                        .stroke(Color.green, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 88, height: 88)
+                    Text("\(value)")
+                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .id(value)
+                        .transition(.scale(scale: 1.4).combined(with: .opacity))
+                        .animation(.easeOut(duration: 0.25), value: value)
+                }
+                Text("Tap to skip", tableName: "Localizable")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .onAppear {
+            withAnimation(.linear(duration: 1.0)) {
+                trimEnd = 1.0 / 3.0
+            }
+        }
+        .onChange(of: value) { _, newValue in
+            let target = CGFloat(3 - newValue + 1) / 3.0
+            withAnimation(.linear(duration: 1.0)) {
+                trimEnd = target
+            }
+        }
+        .onTapGesture(perform: onSkip)
     }
 }
 
