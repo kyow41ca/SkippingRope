@@ -141,6 +141,10 @@ final class WatchWorkoutManager: NSObject {
     }
 
     func pause() {
+        if elapsedTime < 30 {
+            endSessionAndReset()
+            return
+        }
         clockTimer?.invalidate()
         clockTimer = nil
         motionManager.stopAccelerometerUpdates()
