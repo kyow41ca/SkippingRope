@@ -413,73 +413,16 @@ struct WatchRecordView: View {
     @State private var showingGoalSheet = false
 
     var body: some View {
-        VStack(spacing: 4) {
+        Group {
             if manager.isRunning || manager.isPaused {
-                HStack(spacing: 8) {
-                    Image(systemName: "figure.jumprope")
-                        .font(.system(size: 24))
-                        .foregroundStyle(manager.isRunning ? .blue : .gray)
-
-                    Text(timeString(manager.elapsedTime))
-                        .font(.system(size: 28, weight: .thin, design: .monospaced))
-                        .foregroundStyle(manager.isRunning ? .primary : .secondary)
+                TabView {
+                    mainWorkoutPage
+                    NowPlayingView()
+                        .ignoresSafeArea()
                 }
-
-                HStack(spacing: 12) {
-                    VStack(spacing: 0) {
-                        Text("\(manager.jumpCount)")
-                            .font(.title3.bold())
-                        Text("jumps")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    VStack(spacing: 0) {
-                        Text(String(format: "%.0f", manager.calories))
-                            .font(.title3.bold())
-                        Text("kcal")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    VStack(spacing: 0) {
-                        HStack(spacing: 2) {
-                            Image(systemName: "heart.fill")
-                                .font(.caption2)
-                                .foregroundStyle(.red)
-                            Text(manager.heartRate > 0 ? String(format: "%.0f", manager.heartRate) : "--")
-                                .font(.title3.bold())
-                        }
-                        Text("bpm")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
             } else {
-                Image(systemName: "figure.jumprope")
-                    .font(.system(size: 40))
-                    .foregroundStyle(.gray)
-            }
-
-            if manager.isRunning {
-                Button("Pause") { manager.pause() }
-                    .tint(.orange)
-                    .buttonStyle(.bordered)
-            } else if manager.isPaused {
-                Button("Resume") { manager.resume() }
-                    .tint(.green)
-                    .buttonStyle(.bordered)
-                Button("End") { manager.end(context: modelContext) }
-                    .tint(.red)
-                    .buttonStyle(.bordered)
-            } else {
-                Button("Start") {
-                    manager.goal = .none
-                    manager.beginCountdown()
-                }
-                .tint(.green)
-                .buttonStyle(.bordered)
-                Button("Goal") { showingGoalSheet = true }
-                    .tint(.blue)
-                    .buttonStyle(.bordered)
+                idlePage
             }
         }
         .sheet(isPresented: $showingGoalSheet) {
@@ -499,6 +442,78 @@ struct WatchRecordView: View {
         .animation(.easeInOut(duration: 0.4), value: manager.showingGoalAchievement)
         .task {
             await manager.requestAuthorization()
+        }
+    }
+
+    // MARK: Pages
+
+    private var mainWorkoutPage: some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 8) {
+                Image(systemName: "figure.jumprope")
+                    .font(.system(size: 24))
+                    .foregroundStyle(manager.isRunning ? .blue : .gray)
+                Text(timeString(manager.elapsedTime))
+                    .font(.system(size: 28, weight: .thin, design: .monospaced))
+                    .foregroundStyle(manager.isRunning ? .primary : .secondary)
+            }
+            HStack(spacing: 12) {
+                VStack(spacing: 0) {
+                    Text("\(manager.jumpCount)")
+                        .font(.title3.bold())
+                    Text("jumps")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                VStack(spacing: 0) {
+                    Text(String(format: "%.0f", manager.calories))
+                        .font(.title3.bold())
+                    Text("kcal")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                VStack(spacing: 0) {
+                    HStack(spacing: 2) {
+                        Image(systemName: "heart.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                        Text(manager.heartRate > 0 ? String(format: "%.0f", manager.heartRate) : "--")
+                            .font(.title3.bold())
+                    }
+                    Text("bpm")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            if manager.isRunning {
+                Button("Pause") { manager.pause() }
+                    .tint(.orange)
+                    .buttonStyle(.bordered)
+            } else {
+                Button("Resume") { manager.resume() }
+                    .tint(.green)
+                    .buttonStyle(.bordered)
+                Button("End") { manager.end(context: modelContext) }
+                    .tint(.red)
+                    .buttonStyle(.bordered)
+            }
+        }
+    }
+
+    private var idlePage: some View {
+        VStack(spacing: 4) {
+            Image(systemName: "figure.jumprope")
+                .font(.system(size: 40))
+                .foregroundStyle(.gray)
+            Button("Start") {
+                manager.goal = .none
+                manager.beginCountdown()
+            }
+            .tint(.green)
+            .buttonStyle(.bordered)
+            Button("Goal") { showingGoalSheet = true }
+                .tint(.blue)
+                .buttonStyle(.bordered)
         }
     }
 
