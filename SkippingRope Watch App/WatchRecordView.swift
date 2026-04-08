@@ -108,6 +108,13 @@ enum GoalKind: Hashable {
 final class WatchWorkoutManager: NSObject {
     private let healthStore = HKHealthStore()
     private let motionManager = CMMotionManager()
+    private let motionQueue: OperationQueue = {
+        let q = OperationQueue()
+        q.maxConcurrentOperationCount = 1
+        return q
+    }()
+    private var motionAboveThreshold = false
+    private var motionLastJumpTime: Date = .distantPast
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
     private var clockTimer: Timer?
@@ -129,8 +136,6 @@ final class WatchWorkoutManager: NSObject {
 
     private let threshold: Double = 1.7
     private let minimumJumpInterval: TimeInterval = 0.3
-    private var wasAboveThreshold = false
-    private var lastJumpTime: Date = .distantPast
 
     func requestAuthorization() async {
         guard HKHealthStore.isHealthDataAvailable() else { return }
@@ -206,12 +211,12 @@ final class WatchWorkoutManager: NSObject {
         calories = 0
         heartRate = 0
         averageHeartRate = 0
-        wasAboveThreshold = false
-        lastJumpTime = .distantPast
+        motionAboveThreshold = false
+        motionLastJumpTime = .distantPast
         goalAchievedOnce = false
         isRunning = true
 
-        clockTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        clockTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.elapsedTime = self.builder?.elapsedTime(at: Date()) ?? 0
             self.checkGoal()
@@ -299,14 +304,14 @@ final class WatchWorkoutManager: NSObject {
         calories = 0
         heartRate = 0
         averageHeartRate = 0
-        wasAboveThreshold = false
-        lastJumpTime = .distantPast
+        motionAboveThreshold = false
+        motionLastJumpTime = .distantPast
     }
 
     private func startAccelerometer() {
         guard motionManager.isAccelerometerAvailable else { return }
         motionManager.accelerometerUpdateInterval = 1.0 / 50.0
-        motionManager.startAccelerometerUpdates(to: .main) { [weak self] data, _ in
+        motionManager.startAccelerometerUpdates(to: motionQueue) { [weak self] data, _ in
             guard let self, let data else { return }
             self.process(data.acceleration)
         }
@@ -316,17 +321,20 @@ final class WatchWorkoutManager: NSObject {
         let magnitude = (acc.x * acc.x + acc.y * acc.y + acc.z * acc.z).squareRoot()
 
         if magnitude > threshold {
-            if !wasAboveThreshold {
+            if !motionAboveThreshold {
                 let now = Date()
-                if now.timeIntervalSince(lastJumpTime) >= minimumJumpInterval {
-                    lastJumpTime = now
-                    jumpCount += 1
-                    checkGoal()
+                if now.timeIntervalSince(motionLastJumpTime) >= minimumJumpInterval {
+                    motionLastJumpTime = now
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self else { return }
+                        self.jumpCount += 1
+                        self.checkGoal()
+                    }
                 }
             }
-            wasAboveThreshold = true
+            motionAboveThreshold = true
         } else {
-            wasAboveThreshold = false
+            motionAboveThreshold = false
         }
     }
 }
@@ -350,7 +358,7 @@ extension WatchWorkoutManager: HKWorkoutSessionDelegate {
                 isRunning = true
                 isPaused = false
                 startAccelerometer()
-                clockTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+                clockTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
                     guard let self else { return }
                     self.elapsedTime = self.builder?.elapsedTime(at: Date()) ?? 0
                     self.checkGoal()
