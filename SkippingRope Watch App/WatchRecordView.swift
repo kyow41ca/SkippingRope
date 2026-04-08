@@ -226,10 +226,6 @@ final class WatchWorkoutManager: NSObject {
     }
 
     func pause() {
-        if elapsedTime < 30 {
-            endSessionAndReset()
-            return
-        }
         clockTimer?.invalidate()
         clockTimer = nil
         motionManager.stopAccelerometerUpdates()
@@ -240,20 +236,18 @@ final class WatchWorkoutManager: NSObject {
         session?.resume()
     }
 
-    func save(context: ModelContext) {
-        let record = WatchWorkoutRecord(
-            date: Date(),
-            duration: elapsedTime,
-            jumpCount: jumpCount,
-            calories: calories,
-            averageHeartRate: averageHeartRate
-        )
-        context.insert(record)
-        WKInterfaceDevice.current().play(.success)
-        endSessionAndReset()
-    }
-
-    func reset() {
+    func end(context: ModelContext) {
+        if elapsedTime >= 30 {
+            let record = WatchWorkoutRecord(
+                date: Date(),
+                duration: elapsedTime,
+                jumpCount: jumpCount,
+                calories: calories,
+                averageHeartRate: averageHeartRate
+            )
+            context.insert(record)
+            WKInterfaceDevice.current().play(.success)
+        }
         endSessionAndReset()
     }
 
@@ -473,8 +467,8 @@ struct WatchRecordView: View {
                 Button("Resume") { manager.resume() }
                     .tint(.green)
                     .buttonStyle(.bordered)
-                Button("Save") { manager.save(context: modelContext) }
-                    .tint(.blue)
+                Button("End") { manager.end(context: modelContext) }
+                    .tint(.red)
                     .buttonStyle(.bordered)
             } else {
                 Button("Start") {
